@@ -32,14 +32,16 @@ function registerPilot() {
 }
 
 function initGame() {
-    // Расчет Оффлайн Дохода
+    // Исправленный расчет Оффлайн Дохода
     if (state.upgrades.offline > 0) {
         let diffMs = Date.now() - state.lastTime;
-        let tenMins = Math.floor(diffMs / 600000); // Сколько 10-минутных отрезков прошло
+        let tenMins = Math.floor(diffMs / 600000); 
         if (tenMins > 0) {
             let offlineEarned = tenMins * 5 * state.upgrades.offline;
-            state.cargo[1] += offlineEarned;
-            showToast(`🛰️ С возвращением! Пока вас не было, дроны накопили ${offlineEarned} ед. базовой руды!`);
+            state.cargo[1] += offlineEarned; // Добавляем строго в первый слот руды (Железо)
+            setTimeout(() => {
+                showToast(`🛰️ С возвращением! Пока вас не было, дроны накопили ${offlineEarned} ед. базовой руды!`);
+            }, 1000);
         }
     }
     
@@ -109,7 +111,7 @@ function playPirateRoulette() {
     let rand = Math.random();
     if (rand < 0.2) { state.money += 5000; showToast("🎰 ДЖЕКПОТ! Вы сорвали куш на Чёрном Рынке: +5000$!"); }
     else if (rand < 0.4) { state.upgrades.drone += 2; showToast("🎰 УСПЕХ! Пираты подарили вам 2 Хакерских Дрона!"); }
-    else if (rand < 0.7) { state.cargo[1] = 0; showToast("🏴‍☠️ ОБМАН! Пираты напоили вас космо-элем и обчистили трюмы!"); }
+    else if (rand < 0.7) { state.cargo[1] = 0; state.cargo[2] = 0; state.cargo[3] = 0; showToast("🏴‍☠️ ОБМАН! Пираты напоили вас космо-элем и обчистили трюмы!"); }
     else { state.money = Math.max(0, state.money - 1000); showToast("🚨 ОБЛАВА! Прилетела Космо-Полиция. Штраф за контрабанду: -1000$!"); }
     updateUI(); saveGame();
 }
@@ -117,8 +119,8 @@ function playPirateRoulette() {
 function triggerWarpJump() {
     if (state.money >= 25000 && state.galaxy === 1) {
         state.money -= 25000; state.galaxy = 2;
-        document.body.style.backgroundColor = galaxyConfigs[2].color;
-        showToast("🌌 ВАРП-ДВИГАТЕЛЬ ЗАПУЩЕН! Вы перешли в Туманность Андромеды!");
+        document.body.style.backgroundColor = galaxyConfigs.color;
+        showToast("🌌 ВАРП-ДВИГАТЕЛЬ ЗАПУЩЕН! Вы перешли в Туманность Андметоды!");
         updateUI(); saveGame();
     } else if (state.galaxy === 2) { showToast("🚀 Вы уже достигли крайней доступной Галактики!"); }
     else { showToast("❌ Для гиперпрыжка нужно 25 000$!"); }
