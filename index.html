@@ -3,117 +3,108 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Space Tycoon: INFINITY</title>
+    <title>AvtoBuy: INFINITY PEREKUP</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Окно регистрации ника -->
-    <div id="auth-modal" class="modal-overlay">
-        <div class="modal-content">
-            <h2>🚀 Регистрация Пилота</h2>
-            <p>Придумайте позывной (до 8 символов):</p>
-            <input type="text" id="pilot-name-input" maxlength="8" placeholder="PILOT">
-            <button class="btn-primary" onclick="registerPilot()">Начать миссию 🧑‍🚀</button>
+    <div class="phone-container">
+        <!-- Верхний бар -->
+        <div class="status-bar">
+            <span id="phone-time">15:31</span>
+            <span class="geo-badge">📍 <span id="current-city-badge">Тула</span></span>
+            <span>📶 🔋 63%</span>
         </div>
-    </div>
 
-    <div class="app-container">
-        <!-- Шапка -->
-        <header class="game-header">
-            <div class="stat-box">💰 <span id="money">500</span> $</div>
-            <div class="stat-box">🧑‍🚀 <span id="pilot-name-display">...</span></div>
-        </header>
-        
-        <div class="galaxy-badge">🌌 Галактика: <span id="galaxy-text">Млечный Путь</span></div>
-
-        <!-- Уведомления об ивентах -->
-        <div id="event-toast" class="event-toast hidden"></div>
-
-        <!-- ВКЛАДКА 1: АСТЕРОИД И БОСС -->
-        <div id="screen-mine" class="game-screen">
-            <!-- Режим Босса (включается сиреной) -->
-            <div id="boss-panel" class="boss-panel hidden">
-                <div class="boss-title">🚨 ТРЕВОГА! ПРИЛЕТЕЛ АСТЕРОИД-БОСС! 🚨</div>
-                <div class="boss-hp-bar"><div id="boss-hp-fill"></div></div>
-                <div class="boss-timer">Времени осталось: <span id="boss-time">60</span>с</div>
+        <!-- ЭКРАН 1: РАБОЧИЙ СТОЛ (ХАБ) -->
+        <div id="screen-home" class="desktop-screen">
+            <div class="app-grid">
+                <div class="app-icon" onclick="openApp('avtobuy')">
+                    <div class="icon-box blue">🚗</div>
+                    <span>AvtoBuy</span>
+                </div>
+                <div class="app-icon" onclick="openApp('bank')">
+                    <div class="icon-box orange">🏦</div>
+                    <span>П-Банк</span>
+                </div>
+                <div class="app-icon" onclick="openApp('garage')">
+                    <div class="icon-box teal">🏠</div>
+                    <span>Гараж</span>
+                </div>
+                <div class="app-icon" onclick="openApp('map')">
+                    <div class="icon-box red">🗺️</div>
+                    <span>Транспорт</span>
+                </div>
+                <div class="app-icon" onclick="goToSleep()">
+                    <div class="icon-box black">💤</div>
+                    <span>Сон</span>
+                </div>
             </div>
+        </div>
 
-            <div class="asteroid-container">
-                <div class="asteroid" id="main-asteroid" onclick="handleAsteroidClick(event)">🪨</div>
-                <p class="hint-text" id="click-hint">Тапай по астероиду для добычи!</p>
+        <!-- ПРИЛОЖЕНИЕ: П-БАНК -->
+        <div id="app-bank" class="app-window hidden">
+            <header class="app-header orange">
+                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <h2>П-Банк</h2>
+            </header>
+            <div class="app-content">
+                <div class="bank-card">
+                    <p>ВАШ БАЛАНС</p>
+                    <h1><span id="bank-balance">75 893</span> ₽</h1>
+                </div>
+                <h3>История операций</h3>
+                <div class="history-list" id="bank-history">
+                    <!-- Сюда летят логи транзакций -->
+                </div>
             </div>
-            
-            <section class="panel">
-                <h2>📦 Трюм корабля</h2>
-                <div class="cargo-grid">
-                    <div class="cargo-item"><span id="ore1-name">Железо</span>: <b id="cargo-1">0</b> шт</div>
-                    <div class="cargo-item"><span id="ore2-name">Золото</span>: <b id="cargo-2">0</b> шт</div>
-                    <div class="cargo-item"><span id="ore3-name">Платина</span>: <b id="cargo-3">0</b> шт</div>
-                </div>
-            </section>
         </div>
 
-        <!-- ВКЛАДКА 2: БИРЖА -->
-        <div id="screen-market" class="game-screen hidden">
-            <section class="panel">
-                <h2>📈 Галактический Рынок (Обновление: <span id="timer">15</span>с)</h2>
-                <div class="market-row">
-                    <span id="m-ore1">🪨 Железо:</span> <span class="price-tag" id="price-1">10$</span>
-                    <button class="btn-sell" onclick="sellOre(1)">Продать всё</button>
-                </div>
-                <div class="market-row">
-                    <span id="m-ore2">✨ Золото:</span> <span class="price-tag" id="price-2">50$</span>
-                    <button class="btn-sell" onclick="sellOre(2)">Продать всё</button>
-                </div>
-                <div class="market-row">
-                    <span id="m-ore3">💎 Платина:</span> <span class="price-tag" id="price-3">150$</span>
-                    <button class="btn-sell" onclick="sellOre(3)">Продать всё</button>
-                </div>
-            </section>
+        <!-- ПРИЛОЖЕНИЕ: AVTOBUY -->
+        <div id="app-avtobuy" class="app-window hidden">
+            <header class="app-header blue">
+                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <h2>Объявления: <span id="current-market-city">Тула</span></h2>
+            </header>
+            <div class="app-content" id="feed-container">
+                <!-- Объявления машин -->
+            </div>
         </div>
 
-        <!-- ВКЛАДКА 3: МАГАЗИН И ОФФЛАЙН -->
-        <div id="screen-shop" class="game-screen hidden">
-            <section class="panel">
-                <h2>🛒 Отсек Модернизации</h2>
-                <div class="shop-item">
-                    <div><h3>🤖 Буровой Дрон</h3><p>Авто-добыча базовой руды (+1 в 3 сек)</p></div>
-                    <button class="btn-buy" id="btn-upgrade-drone" onclick="buyUpgrade('drone')">300$</button>
-                </div>
-                <div class="shop-item">
-                    <div><h3>⚡ Квантовый Бур</h3><p>Удваивает добычу от твоих кликов</p></div>
-                    <button class="btn-buy" id="btn-upgrade-drill" onclick="buyUpgrade('drill')">800$</button>
-                </div>
-                <div class="shop-item">
-                    <div><h3>💤 Оффлайн-Автоматика</h3><p>Копит ресурсы, пока ты не в игре (+5 руды в 10 мин)</p></div>
-                    <button class="btn-buy" id="btn-upgrade-offline" onclick="buyUpgrade('offline')">1500$</button>
-                </div>
-            </section>
+        <!-- ПРИЛОЖЕНИЕ: ЧАТ ТОРГА -->
+        <div id="app-chat" class="app-window hidden">
+            <header class="app-header chat-head">
+                <button class="btn-back" onclick="openApp('avtobuy')">⬅️ Назад</button>
+                <h2 id="chat-seller-name">Продавец</h2>
+            </header>
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-box"></div>
+                <div class="chat-input-area" id="chat-controls"></div>
+            </div>
         </div>
 
-        <!-- ВКЛАДКА 4: СЕКТОР ПИРАТОВ И ГАЛАКТИКИ -->
-        <div id="screen-dark" class="game-screen hidden">
-            <section class="panel черная-зона">
-                <h2>🕵️ Чёрный Рынок Пиратов</h2>
-                <p style="font-size:12px; text-align:center; color:#9ca3af; margin-bottom:10px;">Ставка: 30 шт. второй руды. Рискнёшь в Космо-Рулетку?</p>
-                <button class="btn-pirate" onclick="playPirateRoulette()">🎰 Запустить Рулетку Пиратов</button>
-            </section>
-
-            <section class="panel">
-                <h2>🌌 Космический Ангар Эволюции</h2>
-                <p style="font-size:12px; text-align:center; color:#9ca3af; margin-bottom:10px;">Варп-прыжок откроет новые редкие ресурсы и изменит мир!</p>
-                <button class="btn-warp" id="btn-warp" onclick="triggerWarpJump()">🚀 Совершить Гиперпрыжок (Цена: 25000$)</button>
-                <button class="btn-reset-data" style="margin-top:30px;" onclick="resetAllData()">Обнулить прогресс 🔄</button>
-            </section>
+        <!-- ПРИЛОЖЕНИЕ: ГАРАЖ -->
+        <div id="app-garage" class="app-window hidden">
+            <header class="app-header teal">
+                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <h2>Ваш Автопарк</h2>
+            </header>
+            <div class="app-content" id="garage-container"></div>
         </div>
 
-        <!-- Навигация -->
-        <footer class="nav-footer">
-            <button class="nav-btn active" id="nav-mine" onclick="switchScreen('mine')">⛏️ Бур</button>
-            <button class="nav-btn" id="nav-market" onclick="switchScreen('market')">📈 Биржа</button>
-            <button class="nav-btn" id="nav-shop" onclick="switchScreen('shop')">🛒 Торговля</button>
-            <button class="nav-btn" id="nav-dark" onclick="switchScreen('dark')">🌌 Космос</button>
-        </footer>
+        <!-- ПРИЛОЖЕНИЕ: ТРАНСПОРТ (КАРТА ГОРОДОВ) -->
+        <div id="app-map" class="app-window hidden">
+            <header class="app-header red">
+                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <h2>Куда едем?</h2>
+            </header>
+            <div class="app-content">
+                <p class="map-hint">Вы сейчас находитесь в: <b id="map-current-city">Тула</b></p>
+                <div class="city-list" id="city-travel-list">
+                    <!-- Города для путешествий -->
+                </div>
+            </div>
+        </div>
+
     </div>
     <script src="script.js"></script>
 </body>
