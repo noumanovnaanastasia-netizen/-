@@ -1,8 +1,8 @@
 // ==========================================
-// ЧАСТЬ 1: НАСТРОЙКИ, БАНК И ГАРАЖ
+// ЧАСТЬ 1: НАСТРОЙКИ, БАНК И ГАРАЖ (МОБИЛЬНАЯ)
 // ==========================================
 
-let player = JSON.parse(localStorage.getItem('avtobuy_infinity_save')) || {
+let player = JSON.parse(localStorage.getItem('avtobuy_mobile_save')) || {
     money: 75893,
     currentCity: "Тула",
     garage: [],
@@ -28,37 +28,31 @@ const carPool = [
 
 const names = ["Артём", "Юрий", "Евгений", "Николай", "Сергей", "Влад"];
 let currentChatCar = null;
-let currentCityFeed = []; 
+let currentCityFeed = [];
 
-// Стартовая инициализация
 window.onload = function() {
     updateUI();
-    if (!localStorage.getItem('avtobuy_infinity_save') || currentCityFeed.length === 0) {
+    if (!localStorage.getItem('avtobuy_mobile_save') || currentCityFeed.length === 0) {
         generateFeedForCurrentCity();
     }
-    renderFeed();
 };
 
 function saveGame() {
-    localStorage.setItem('avtobuy_infinity_save', JSON.stringify(player));
+    localStorage.setItem('avtobuy_mobile_save', JSON.stringify(player));
 }
 
 function updateUI() {
     document.getElementById('bank-balance').innerText = player.money.toLocaleString();
     document.getElementById('current-city-badge').innerText = player.currentCity;
     document.getElementById('current-market-city').innerText = player.currentCity;
-    document.getElementById('map-current-city').innerText = player.currentCity;
     
     const historyBox = document.getElementById('bank-history');
-    historyBox.innerHTML = '';
-    player.history.slice().reverse().forEach(item => {
-        historyBox.innerHTML += `
-            <div class="history-item ${item.type}">
-                <span>${item.text}</span>
-                <strong>${item.val}</strong>
-            </div>
-        `;
-    });
+    if (historyBox) {
+        historyBox.innerHTML = '';
+        player.history.slice().reverse().forEach(item => {
+            historyBox.innerHTML += `<div class="history-item ${item.type}"><span>${item.text}</span><strong>${item.val}</strong></div>`;
+        });
+    }
 }
 
 function openApp(id) {
@@ -68,11 +62,13 @@ function openApp(id) {
     
     if (id === 'garage') renderGarage();
     if (id === 'map') renderMap();
+    if (id === 'avtobuy') renderFeed();
 }
 
 function closeApp() {
     document.querySelectorAll('.app-window').forEach(app => app.classList.add('hidden'));
     document.getElementById('screen-home').classList.remove('hidden');
+    updateUI();
 }
 
 function renderGarage() {
@@ -80,9 +76,8 @@ function renderGarage() {
     container.innerHTML = player.garage.length === 0 ? '<p style="text-align:center;color:#6b7280;padding-top:30px;">Твой автопарк пуст. Купи авто на AvtoBuy!</p>' : '';
     
     player.garage.forEach((car, index) => {
-        let div = document.createElement('div');
-        div.className = 'car-card';
-        let retailPrice = Math.floor(car.marketValue * 1.18); 
+        let div = document.createElement('div'); div.className = 'car-card';
+        let retailPrice = Math.floor(car.marketValue * 1.18);
         div.innerHTML = `
             <div class="car-title">${car.model}</div>
             <div class="car-desc">Куплено за: ${car.buyPrice.toLocaleString()} ₽<br>Рыночная стоимость: ${car.marketValue.toLocaleString()} ₽</div>
@@ -94,29 +89,12 @@ function renderGarage() {
 }
 
 function sellCarFromGarage(index, price) {
-    let car = player.garage[index];
-    player.money += price;
-    player.garage.splice(index, 1);
-
-    player.history.push({
-        text: `Продано авто: ${car.model}`,
-        val: `+${price.toLocaleString()} ₽`,
-        type: "positive"
-    });
-
-    saveGame();
-    updateUI();
-    renderGarage();
-    alert("Успешно продано! Деньги зачислены на баланс! 🎉");
-}
-
-function goToSleep() {
-    alert("Вы легли спать. Время промоталось, авторынок обновился! 💤");
-    generateFeedForCurrentCity();
-    renderFeed();
+    let car = player.garage[index]; player.money += price; player.garage.splice(index, 1);
+    player.history.push({ text: `Продано авто: ${car.model}`, val: `+${price.toLocaleString()} ₽`, type: "positive" });
+    saveGame(); updateUI(); renderGarage(); alert("Успешно продано! Деньги зачислены на баланс! 🎉");
 }
 // ==========================================
-// ЧАСТЬ 2: ОБЪЯВЛЕНИЯ, ЧАТ И ЛОГИСТИКА
+// ЧАСТЬ 2: ОБЪЯВЛЕНИЯ, ЧАТ И ЛОГИСТИКА (МОБИЛЬНАЯ)
 // ==========================================
 
 function generateFeedForCurrentCity() {
@@ -126,18 +104,12 @@ function generateFeedForCurrentCity() {
     for (let i = 0; i < 4; i++) {
         let template = carPool[Math.floor(Math.random() * carPool.length)];
         let mod = template.basePrice > 500000 ? 1 : cityMod;
-        
         let marketValue = Math.floor(template.basePrice * mod * (1 + (Math.random() * 0.1 - 0.05)));
         let initialPrice = Math.floor(marketValue * 0.9); 
         let seller = names[Math.floor(Math.random() * names.length)];
 
         currentCityFeed.push({
-            model: template.model,
-            initialPrice: initialPrice,
-            currentPrice: initialPrice,
-            marketValue: marketValue,
-            seller: seller,
-            desc: template.desc
+            model: template.model, initialPrice: initialPrice, currentPrice: initialPrice, marketValue: marketValue, seller: seller, desc: template.desc
         });
     }
 }
@@ -151,7 +123,7 @@ function renderFeed() {
         card.innerHTML = `
             <div class="car-title">${car.model}</div>
             <div class="car-price">${car.currentPrice.toLocaleString()} ₽</div>
-            <div class="car-desc">Продавец: ${car.seller} | Рыночная цена: ${car.marketValue.toLocaleString()} ₽<br>${car.desc}</div>
+            <div class="car-desc">Продавец: ${car.seller} | Рынок: ${car.marketValue.toLocaleString()} ₽<br>${car.desc}</div>
             <button class="btn-action" onclick="startDeal(${index})">Позвонить / Торговаться</button>
         `;
         feed.appendChild(card);
@@ -160,7 +132,6 @@ function renderFeed() {
 
 function startDeal(index) {
     currentChatCar = { ...currentCityFeed[index], index: index, step: 0 };
-    
     openApp('chat');
     document.getElementById('chat-seller-name').innerText = currentChatCar.seller;
     
@@ -172,9 +143,8 @@ function startDeal(index) {
 function showChatControls() {
     const ctrl = document.getElementById('chat-controls');
     ctrl.innerHTML = '';
-
-    let offer1 = Math.floor(currentChatCar.currentPrice * 0.88); 
-    let offer2 = Math.floor(currentChatCar.currentPrice * 0.94); 
+    let offer1 = Math.floor(currentChatCar.currentPrice * 0.88);
+    let offer2 = Math.floor(currentChatCar.currentPrice * 0.94);
 
     if (currentChatCar.step === 0) {
         ctrl.innerHTML = `
@@ -192,8 +162,7 @@ function showChatControls() {
 function playerOffer(amount, type) {
     const box = document.getElementById('chat-box');
     box.innerHTML += `<div class="msg player">Предлагаю ${amount.toLocaleString()} ₽ за вашу машину. 💰</div>`;
-    currentChatCar.step = 1;
-    showChatControls();
+    currentChatCar.step = 1; showChatControls();
     box.scrollTop = box.scrollHeight;
 
     setTimeout(() => {
@@ -205,50 +174,27 @@ function playerOffer(amount, type) {
             currentChatCar.currentPrice = amount;
             box.innerHTML += `<div class="msg seller">Ладно, убедил. По рукам, забирай за ${amount.toLocaleString()} ₽! По рукам.</div>`;
         }
-        showChatControls();
-        box.scrollTop = box.scrollHeight;
+        showChatControls(); box.scrollTop = box.scrollHeight;
     }, 800);
 }
 
 function confirmPurchase() {
     if (player.money >= currentChatCar.currentPrice) {
         player.money -= currentChatCar.currentPrice;
-        player.garage.push({
-            model: currentChatCar.model,
-            buyPrice: currentChatCar.currentPrice,
-            marketValue: currentChatCar.marketValue
-        });
-        
-        player.history.push({
-            text: `Покупка авто: ${currentChatCar.model}`,
-            val: `-${currentChatCar.currentPrice.toLocaleString()} ₽`,
-            type: "negative"
-        });
-
+        player.garage.push({ model: currentChatCar.model, buyPrice: currentChatCar.currentPrice, marketValue: currentChatCar.marketValue });
+        player.history.push({ text: `Покупка авто: ${currentChatCar.model}`, val: `-${currentChatCar.currentPrice.toLocaleString()} ₽`, type: "negative" });
         currentCityFeed.splice(currentChatCar.index, 1);
-        
-        saveGame();
-        updateUI();
-        alert("Сделка согласована! Машина перегнана в ваш Гараж. 🚙");
-        openApp('garage');
-    } else {
-        alert("Ошибка! Недостаточно денег в П-Банке!");
-    }
+        saveGame(); updateUI(); alert("Сделка согласована! Машина перегнана в ваш Гараж. 🚙"); openApp('garage');
+    } else { alert("Ошибка! Недостаточно денег в П-Банке!"); }
 }
 
 function renderMap() {
     const list = document.getElementById('city-travel-list');
     list.innerHTML = '';
-
     for (let cityName in cities) {
-        let div = document.createElement('div');
-        div.className = 'city-card';
-        
+        let div = document.createElement('div'); div.className = 'city-card';
         if (cityName === player.currentCity) {
-            div.innerHTML = `
-                <div class="city-info"><h4>${cityName}</h4><p>${cities[cityName].desc}</p></div>
-                <span class="current-city-placeholder">Вы здесь 📍</span>
-            `;
+            div.innerHTML = `<div class="city-info"><h4>${cityName}</h4><p>${cities[cityName].desc}</p></div><span class="current-city-placeholder">Вы здесь 📍</span>`;
         } else {
             let trainCost = Math.floor(2020 + cities[cityName].dist * 0.5);
             let planeCost = Math.floor(6664 + cities[cityName].dist * 1.2);
@@ -257,8 +203,7 @@ function renderMap() {
                 <div class="travel-options">
                     <button class="btn-travel train" onclick="travelToCity('${cityName}', ${trainCost}, 'Поезд')">🚂 ${trainCost}₽</button>
                     <button class="btn-travel plane" onclick="travelToCity('${cityName}', ${planeCost}, 'Самолёт')">✈️ ${planeCost}₽</button>
-                </div>
-            `;
+                </div>`;
         }
         list.appendChild(div);
     }
@@ -266,34 +211,14 @@ function renderMap() {
 
 function travelToCity(targetCity, cost, mode) {
     if (player.money >= cost) {
-        player.money -= cost;
-        player.currentCity = targetCity;
-        
-        player.history.push({
-            text: `${mode}: ${player.currentCity}`,
-            val: `-${cost.toLocaleString()} ₽`,
-            type: "negative"
-        });
-
-        generateFeedForCurrentCity(); 
-        saveGame();
-        updateUI();
-        renderMap();
-        alert(`Вы прибыли в г. ${targetCity}! Лента AvtoBuy обновилась локальными объявлениями.`);
-    } else {
-        alert("Недостаточно денег на билет!");
-    }
+        player.money -= cost; player.currentCity = targetCity;
+        player.history.push({ text: `${mode}: ${player.currentCity}`, val: `-${cost.toLocaleString()} ₽`, type: "negative" });
+        generateFeedForCurrentCity(); saveGame(); updateUI(); renderMap(); alert(`Вы прибыли в г. ${targetCity}!`);
+    } else { alert("Недостаточно денег на билет!"); }
 }
 
-setInterval(() => { 
-    timeLeft--; 
-    document.getElementById('timer').innerText = timeLeft; 
-    if (timeLeft <= 0) { 
-        timeLeft = 15; 
-        let cityMod = player.currentCity === "Москва" ? 1.2 : (player.currentCity === "Киров" ? 0.85 : 1.0);
-        currentCityFeed.forEach(car => {
-            car.currentPrice = Math.floor(car.initialPrice * (1 + (Math.random() * 0.06 - 0.03)));
-        });
-        renderFeed();
-    } 
-}, 1000);
+function goToSleep() {
+    alert("Вы поспали. Авторынок обновился! 💤");
+    generateFeedForCurrentCity();
+    renderFeed();
+}
