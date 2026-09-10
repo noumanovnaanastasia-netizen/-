@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AvtoBuy: INFINITY PEREKUP</title>
+    <title>AvtoBuy: Mobile Edition</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="phone-container">
-        <!-- Верхний бар -->
+        <!-- Верхний статус-бар телефона -->
         <div class="status-bar">
-            <span id="phone-time">15:31</span>
+            <span>15:31</span>
             <span class="geo-badge">📍 <span id="current-city-badge">Тула</span></span>
             <span>📶 🔋 63%</span>
         </div>
 
-        <!-- ЭКРАН 1: РАБОЧИЙ СТОЛ (ХАБ) -->
+        <!-- ЭКРАН 1: РАБОЧИЙ СТОЛ СМАРТФОНА -->
         <div id="screen-home" class="desktop-screen">
             <div class="app-grid">
                 <div class="app-icon" onclick="openApp('avtobuy')">
@@ -34,17 +34,14 @@
                     <div class="icon-box red">🗺️</div>
                     <span>Транспорт</span>
                 </div>
-                <div class="app-icon" onclick="goToSleep()">
-                    <div class="icon-box black">💤</div>
-                    <span>Сон</span>
-                </div>
             </div>
+            <button class="btn-sleep-mobile" onclick="goToSleep()">💤 Промотать время (Сон)</button>
         </div>
 
         <!-- ПРИЛОЖЕНИЕ: П-БАНК -->
         <div id="app-bank" class="app-window hidden">
             <header class="app-header orange">
-                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
                 <h2>П-Банк</h2>
             </header>
             <div class="app-content">
@@ -53,21 +50,17 @@
                     <h1><span id="bank-balance">75 893</span> ₽</h1>
                 </div>
                 <h3>История операций</h3>
-                <div class="history-list" id="bank-history">
-                    <!-- Сюда летят логи транзакций -->
-                </div>
+                <div class="history-list" id="bank-history"></div>
             </div>
         </div>
 
-        <!-- ПРИЛОЖЕНИЕ: AVTOBUY -->
+        <!-- ПРИЛОЖЕНИЕ: AVTOBUY (ЛЕНТА ОБЪЯВЛЕНИЙ) -->
         <div id="app-avtobuy" class="app-window hidden">
             <header class="app-header blue">
-                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
                 <h2>Объявления: <span id="current-market-city">Тула</span></h2>
             </header>
-            <div class="app-content" id="feed-container">
-                <!-- Объявления машин -->
-            </div>
+            <div class="app-content" id="feed-container"></div>
         </div>
 
         <!-- ПРИЛОЖЕНИЕ: ЧАТ ТОРГА -->
@@ -85,7 +78,7 @@
         <!-- ПРИЛОЖЕНИЕ: ГАРАЖ -->
         <div id="app-garage" class="app-window hidden">
             <header class="app-header teal">
-                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
                 <h2>Ваш Автопарк</h2>
             </header>
             <div class="app-content" id="garage-container"></div>
@@ -94,14 +87,12 @@
         <!-- ПРИЛОЖЕНИЕ: ТРАНСПОРТ (КАРТА ГОРОДОВ) -->
         <div id="app-map" class="app-window hidden">
             <header class="app-header red">
-                <button class="btn-back" onclick="closeApp()">⬅️</button>
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
                 <h2>Куда едем?</h2>
             </header>
             <div class="app-content">
                 <p class="map-hint">Вы сейчас находитесь в: <b id="map-current-city">Тула</b></p>
-                <div class="city-list" id="city-travel-list">
-                    <!-- Города для путешествий -->
-                </div>
+                <div class="city-list" id="city-travel-list"></div>
             </div>
         </div>
 
