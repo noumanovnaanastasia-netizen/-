@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Space Tycoon: Астероидная Биржа</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Баланс игрока -->
+        <header class="game-header">
+            <div class="stat-box">💰 Космо-Баксы: <span id="money">500</span> $</div>
+        </header>
+
+        <!-- Рынок цен (Цены прыгают тут) -->
+        <section class="market-panel">
+            <h2>📈 Галактическая Биржа (Обновление: <span id="timer">15</span>с)</h2>
+            <div class="market-row">
+                <span>🪨 Железо:</span>
+                <span class="price-tag" id="price-iron">10$</span>
+            </div>
+            <div class="market-row">
+                <span>✨ Золото:</span>
+                <span class="price-tag" id="price-gold">50$</span>
+            </div>
+            <div class="market-row">
+                <span>💎 Платина:</span>
+                <span class="price-tag" id="price-platinum">150$</span>
+            </div>
+        </section>
+
+        <!-- Твой Трюм (Склад) -->
+        <section class="cargo-panel">
+            <h2>📦 Трюм корабля</h2>
+            <div class="cargo-row">
+                <span>Железо: <b id="cargo-iron">0</b> шт</span>
+                <button class="btn-sell" onclick="sellOre('iron')">Продать</button>
+            </div>
+            <div class="cargo-row">
+                <span>Золото: <b id="cargo-gold">0</b> шт</span>
+                <button class="btn-sell" onclick="sellOre('gold')">Продать</button>
+            </div>
+            <div class="cargo-row">
+                <span>Платина: <b id="cargo-platinum">0</b> шт</span>
+                <button class="btn-sell" onclick="sellOre('platinum')">Продать</button>
+            </div>
+        </section>
+
+        <!-- Главная кнопка добычи -->
+        <footer class="action-footer">
+            <button class="btn-mine" onclick="mineOre()">⛏️ Бурить астероид!</button>
+        </footer>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
