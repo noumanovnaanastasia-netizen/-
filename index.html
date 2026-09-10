@@ -3,53 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Space Tycoon: Астероидная Биржа</title>
+    <title>Space Tycoon: INFINITY</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
+    <!-- Окно регистрации ника -->
+    <div id="auth-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>🚀 Регистрация Пилота</h2>
+            <p>Придумайте позывной (до 8 символов):</p>
+            <input type="text" id="pilot-name-input" maxlength="8" placeholder="PILOT">
+            <button class="btn-primary" onclick="registerPilot()">Начать миссию 🧑‍🚀</button>
+        </div>
+    </div>
+
     <div class="app-container">
-        <!-- Баланс игрока -->
+        <!-- Шапка -->
         <header class="game-header">
-            <div class="stat-box">💰 Космо-Баксы: <span id="money">500</span> $</div>
+            <div class="stat-box">💰 <span id="money">500</span> $</div>
+            <div class="stat-box">🧑‍🚀 <span id="pilot-name-display">...</span></div>
         </header>
+        
+        <div class="galaxy-badge">🌌 Галактика: <span id="galaxy-text">Млечный Путь</span></div>
 
-        <!-- Рынок цен (Цены прыгают тут) -->
-        <section class="market-panel">
-            <h2>📈 Галактическая Биржа (Обновление: <span id="timer">15</span>с)</h2>
-            <div class="market-row">
-                <span>🪨 Железо:</span>
-                <span class="price-tag" id="price-iron">10$</span>
-            </div>
-            <div class="market-row">
-                <span>✨ Золото:</span>
-                <span class="price-tag" id="price-gold">50$</span>
-            </div>
-            <div class="market-row">
-                <span>💎 Платина:</span>
-                <span class="price-tag" id="price-platinum">150$</span>
-            </div>
-        </section>
+        <!-- Уведомления об ивентах -->
+        <div id="event-toast" class="event-toast hidden"></div>
 
-        <!-- Твой Трюм (Склад) -->
-        <section class="cargo-panel">
-            <h2>📦 Трюм корабля</h2>
-            <div class="cargo-row">
-                <span>Железо: <b id="cargo-iron">0</b> шт</span>
-                <button class="btn-sell" onclick="sellOre('iron')">Продать</button>
+        <!-- ВКЛАДКА 1: АСТЕРОИД И БОСС -->
+        <div id="screen-mine" class="game-screen">
+            <!-- Режим Босса (включается сиреной) -->
+            <div id="boss-panel" class="boss-panel hidden">
+                <div class="boss-title">🚨 ТРЕВОГА! ПРИЛЕТЕЛ АСТЕРОИД-БОСС! 🚨</div>
+                <div class="boss-hp-bar"><div id="boss-hp-fill"></div></div>
+                <div class="boss-timer">Времени осталось: <span id="boss-time">60</span>с</div>
             </div>
-            <div class="cargo-row">
-                <span>Золото: <b id="cargo-gold">0</b> шт</span>
-                <button class="btn-sell" onclick="sellOre('gold')">Продать</button>
-            </div>
-            <div class="cargo-row">
-                <span>Платина: <b id="cargo-platinum">0</b> шт</span>
-                <button class="btn-sell" onclick="sellOre('platinum')">Продать</button>
-            </div>
-        </section>
 
-        <!-- Главная кнопка добычи -->
-        <footer class="action-footer">
-            <button class="btn-mine" onclick="mineOre()">⛏️ Бурить астероид!</button>
+            <div class="asteroid-container">
+                <div class="asteroid" id="main-asteroid" onclick="handleAsteroidClick(event)">🪨</div>
+                <p class="hint-text" id="click-hint">Тапай по астероиду для добычи!</p>
+            </div>
+            
+            <section class="panel">
+                <h2>📦 Трюм корабля</h2>
+                <div class="cargo-grid">
+                    <div class="cargo-item"><span id="ore1-name">Железо</span>: <b id="cargo-1">0</b> шт</div>
+                    <div class="cargo-item"><span id="ore2-name">Золото</span>: <b id="cargo-2">0</b> шт</div>
+                    <div class="cargo-item"><span id="ore3-name">Платина</span>: <b id="cargo-3">0</b> шт</div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ВКЛАДКА 2: БИРЖА -->
+        <div id="screen-market" class="game-screen hidden">
+            <section class="panel">
+                <h2>📈 Галактический Рынок (Обновление: <span id="timer">15</span>с)</h2>
+                <div class="market-row">
+                    <span id="m-ore1">🪨 Железо:</span> <span class="price-tag" id="price-1">10$</span>
+                    <button class="btn-sell" onclick="sellOre(1)">Продать всё</button>
+                </div>
+                <div class="market-row">
+                    <span id="m-ore2">✨ Золото:</span> <span class="price-tag" id="price-2">50$</span>
+                    <button class="btn-sell" onclick="sellOre(2)">Продать всё</button>
+                </div>
+                <div class="market-row">
+                    <span id="m-ore3">💎 Платина:</span> <span class="price-tag" id="price-3">150$</span>
+                    <button class="btn-sell" onclick="sellOre(3)">Продать всё</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ВКЛАДКА 3: МАГАЗИН И ОФФЛАЙН -->
+        <div id="screen-shop" class="game-screen hidden">
+            <section class="panel">
+                <h2>🛒 Отсек Модернизации</h2>
+                <div class="shop-item">
+                    <div><h3>🤖 Буровой Дрон</h3><p>Авто-добыча базовой руды (+1 в 3 сек)</p></div>
+                    <button class="btn-buy" id="btn-upgrade-drone" onclick="buyUpgrade('drone')">300$</button>
+                </div>
+                <div class="shop-item">
+                    <div><h3>⚡ Квантовый Бур</h3><p>Удваивает добычу от твоих кликов</p></div>
+                    <button class="btn-buy" id="btn-upgrade-drill" onclick="buyUpgrade('drill')">800$</button>
+                </div>
+                <div class="shop-item">
+                    <div><h3>💤 Оффлайн-Автоматика</h3><p>Копит ресурсы, пока ты не в игре (+5 руды в 10 мин)</p></div>
+                    <button class="btn-buy" id="btn-upgrade-offline" onclick="buyUpgrade('offline')">1500$</button>
+                </div>
+            </section>
+        </div>
+
+        <!-- ВКЛАДКА 4: СЕКТОР ПИРАТОВ И ГАЛАКТИКИ -->
+        <div id="screen-dark" class="game-screen hidden">
+            <section class="panel черная-зона">
+                <h2>🕵️ Чёрный Рынок Пиратов</h2>
+                <p style="font-size:12px; text-align:center; color:#9ca3af; margin-bottom:10px;">Ставка: 30 шт. второй руды. Рискнёшь в Космо-Рулетку?</p>
+                <button class="btn-pirate" onclick="playPirateRoulette()">🎰 Запустить Рулетку Пиратов</button>
+            </section>
+
+            <section class="panel">
+                <h2>🌌 Космический Ангар Эволюции</h2>
+                <p style="font-size:12px; text-align:center; color:#9ca3af; margin-bottom:10px;">Варп-прыжок откроет новые редкие ресурсы и изменит мир!</p>
+                <button class="btn-warp" id="btn-warp" onclick="triggerWarpJump()">🚀 Совершить Гиперпрыжок (Цена: 25000$)</button>
+                <button class="btn-reset-data" style="margin-top:30px;" onclick="resetAllData()">Обнулить прогресс 🔄</button>
+            </section>
+        </div>
+
+        <!-- Навигация -->
+        <footer class="nav-footer">
+            <button class="nav-btn active" id="nav-mine" onclick="switchScreen('mine')">⛏️ Бур</button>
+            <button class="nav-btn" id="nav-market" onclick="switchScreen('market')">📈 Биржа</button>
+            <button class="nav-btn" id="nav-shop" onclick="switchScreen('shop')">🛒 Торговля</button>
+            <button class="nav-btn" id="nav-dark" onclick="switchScreen('dark')">🌌 Космос</button>
         </footer>
     </div>
     <script src="script.js"></script>
