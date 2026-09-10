@@ -1,98 +1,102 @@
-// ==========================================
-// ЧАСТЬ 1: ИСПРАВЛЕННОЕ ЯДРО И ЖЕСТКИЙ ГАРАЖ
-// ==========================================
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>AvtoBuy: INFINITY PEREKUP</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="phone-container">
+        <!-- Верхний статус-бар телефона -->
+        <div class="status-bar">
+            <span>15:31</span>
+            <span class="geo-badge">📍 <span id="current-city-badge">Тула</span></span>
+            <span>📶 🔋 63%</span>
+        </div>
 
-let player = JSON.parse(localStorage.getItem('avtobuy_mobile_save')) || {
-    money: 75893,
-    currentCity: "Тула",
-    garage: [],
-    history: [{ text: "Начальный капитал", val: "+75 893 ₽", type: "positive" }]
-};
+        <!-- ЭКРАН 1: РАБОЧИЙ СТОЛ СМАРТФОНА -->
+        <div id="screen-home" class="desktop-screen">
+            <div class="app-grid">
+                <div class="app-icon" onclick="openApp('avtobuy')">
+                    <div class="icon-box blue">🚗</div>
+                    <span>AvtoBuy</span>
+                </div>
+                <div class="app-icon" onclick="openApp('bank')">
+                    <div class="icon-box orange">🏦</div>
+                    <span>П-Банк</span>
+                </div>
+                <div class="app-icon" onclick="openApp('garage')">
+                    <div class="icon-box teal">🏠</div>
+                    <span>Гараж</span>
+                </div>
+                <div class="app-icon" onclick="openApp('map')">
+                    <div class="icon-box red">🗺️</div>
+                    <span>Транспорт</span>
+                </div>
+            </div>
+            <button class="btn-sleep-mobile" onclick="goToSleep()">💤 Промотать время (Сон)</button>
+        </div>
 
-const cities = {
-    "Тула": { desc: "Твой родной город. Цены стабильные.", dist: 0 },
-    "Москва": { desc: "Огромный авторынок, высокие цены.", dist: 180 },
-    "Питер": { desc: "Много редких иномарок.", dist: 700 },
-    "Киров": { desc: "Дешевые отечественные авто.", dist: 950 },
-    "Смоленск": { desc: "Хорошие варианты из Европы.", dist: 400 },
-    "Тюмень": { desc: "Суровый рынок Сибири.", dist: 2100 }
-};
+        <!-- ПРИЛОЖЕНИЕ: П-БАНК -->
+        <div id="app-bank" class="app-window hidden">
+            <header class="app-header orange">
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
+                <h2>П-Банк</h2>
+            </header>
+            <div class="app-content">
+                <div class="bank-card">
+                    <p>ВАШ БАЛАНС</p>
+                    <h1><span id="bank-balance">75 893</span> ₽</h1>
+                </div>
+                <h3>История операций</h3>
+                <div class="history-list" id="bank-history"></div>
+            </div>
+        </div>
 
-const carPool = [
-    { model: "ЛАДА 2104", basePrice: 55000, desc: "Живой кузов, ковролин, шины dunlop" },
-    { model: "ЛАДА 21099", basePrice: 65000, desc: "Стояла в гараже у деда. Мотор шепчет" },
-    { model: "ИЖ Ода", basePrice: 35000, desc: "Пороги устали, но доедет куда угодно" },
-    { model: "ГАЗ Волга 3110", basePrice: 85000, desc: "Салон велюр, состояние приличное" },
-    { model: "ISUZU V340", basePrice: 1400000, desc: "Мотор миллионник, работяга" }
-];
+        <!-- ПРИЛОЖЕНИЕ: AVTOBUY (ЛЕНТА ОБЪЯВЛЕНИЙ) -->
+        <div id="app-avtobuy" class="app-window hidden">
+            <header class="app-header blue">
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
+                <h2>Объявления: <span id="current-market-city">Тула</span></h2>
+            </header>
+            <div class="app-content" id="feed-container"></div>
+        </div>
 
-const names = ["Артём", "Юрий", "Евгений", "Николай", "Сергей", "Влад", "Димыч", "Лёха"];
-const buyerPhrases = [
-    "Цена кусается. Скинешь?",
-    "За такие деньги она должна быть идеальной. Давай дешевле?",
-    "По фоткам вижу косяки. Уступишь?",
-    "Готов забрать прямо сейчас, но скинь сотку."
-];
+        <!-- ПРИЛОЖЕНИЕ: ЧАТ ТОРГА -->
+        <div id="app-chat" class="app-window hidden">
+            <header class="app-header chat-head">
+                <button class="btn-back" onclick="openApp('avtobuy')">⬅️ Назад</button>
+                <h2 id="chat-seller-name">Продавец</h2>
+            </header>
+            <div class="chat-container">
+                <div class="chat-messages" id="chat-box"></div>
+                <div class="chat-input-area" id="chat-controls"></div>
+            </div>
+        </div>
 
-let currentChatCar = null;
-let currentCityFeed = [];
-let isSellingMode = false; // Режим: мы покупаем или мы продаем?
+        <!-- ПРИЛОЖЕНИЕ: ГАРАЖ -->
+        <div id="app-garage" class="app-window hidden">
+            <header class="app-header teal">
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
+                <h2>Ваш Автопарк</h2>
+            </header>
+            <div class="app-content" id="garage-container"></div>
+        </div>
 
-window.onload = function() {
-    updateUI();
-    if (currentCityFeed.length === 0) {
-        generateFeedForCurrentCity();
-    }
-    renderFeed();
-};
+        <!-- ПРИЛОЖЕНИЕ: ТРАНСПОРТ (КАРТА ГОРОДОВ) -->
+        <div id="app-map" class="app-window hidden">
+            <header class="app-header red">
+                <button class="btn-back" onclick="closeApp()">⬅️ Назад</button>
+                <h2>Куда едем?</h2>
+            </header>
+            <div class="app-content">
+                <p class="map-hint">Вы сейчас находитесь в: <b id="map-current-city">Тула</b></p>
+                <div class="city-list" id="city-travel-list"></div>
+            </div>
+        </div>
 
-function saveGame() {
-    localStorage.setItem('avtobuy_mobile_save', JSON.stringify(player));
-}
-
-function updateUI() {
-    document.getElementById('bank-balance').innerText = player.money.toLocaleString();
-    document.getElementById('current-city-badge').innerText = player.currentCity;
-    document.getElementById('current-market-city').innerText = player.currentCity;
-    
-    const historyBox = document.getElementById('bank-history');
-    if (historyBox) {
-        historyBox.innerHTML = '';
-        player.history.slice().reverse().forEach(item => {
-            historyBox.innerHTML += `<div class="history-item ${item.type}"><span>${item.text}</span><strong>${item.val}</strong></div>`;
-        });
-    }
-}
-
-function openApp(id) {
-    document.getElementById('screen-home').classList.add('hidden');
-    document.querySelectorAll('.app-window').forEach(app => app.classList.add('hidden'));
-    document.getElementById(`app-${id}`).classList.remove('hidden');
-    
-    if (id === 'garage') renderGarage();
-    if (id === 'map') renderMap();
-    if (id === 'avtobuy') renderFeed();
-}
-
-function closeApp() {
-    document.querySelectorAll('.app-window').forEach(app => app.classList.add('hidden'));
-    document.getElementById('screen-home').classList.remove('hidden');
-    updateUI();
-}
-
-function renderGarage() {
-    const container = document.getElementById('garage-container');
-    container.innerHTML = player.garage.length === 0 ? '<p style="text-align:center;color:#6b7280;padding-top:30px;">Твой автопарк пуст.</p>' : '';
-    
-    player.garage.forEach((car, index) => {
-        let div = document.createElement('div');
-        div.className = 'car-card';
-        let idealSalePrice = Math.floor(car.marketValue * 1.2);
-        div.innerHTML = `
-            <div class="car-title">${car.model}</div>
-            <div class="car-desc">Куплено за: ${car.buyPrice.toLocaleString()} ₽<br>Рынок: ${car.marketValue.toLocaleString()} ₽</div>
-            <button class="btn-action" style="background:#22c55e;" onclick="startSellDeal(${index}, ${idealSalePrice})">Ждать покупателя 📱</button>
-        `;
-        container.appendChild(div);
-    });
-}
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
