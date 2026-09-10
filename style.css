@@ -1,72 +1,79 @@
-* { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
-body {
-    background-color: #03050a; color: #f1f5f9;
-    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    display: flex; justify-content: center; height: 100vh; overflow: hidden;
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Roboto, sans-serif; user-select: none; }
+body { background: #07080c; color: #e2e8f0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; padding: 10px; }
+
+.desktop-workspace {
+    display: flex; width: 100%; max-width: 1280px; height: 100%; max-height: 750px;
+    background: #0f111a; border-radius: 20px; border: 3px solid #1e293b; padding: 15px; gap: 15px; box-shadow: 0 25px 60px rgba(0,0,0,0.8);
 }
-.app-container {
-    width: 100%; max-width: 450px; background: #070a12;
-    display: flex; flex-direction: column; padding: 15px; position: relative;
+
+/* --- СМАРТФОН СЛУЖИТ ПАНЕЛЬЮ УПРАВЛЕНИЯ --- */
+.phone-frame {
+    width: 280px; height: 100%; background: #151824; border-radius: 16px; border: 2px solid #334155; overflow: hidden; display: flex; flex-direction: column;
 }
-.game-header { display: flex; justify-content: space-between; margin-bottom: 5px; }
-.stat-box {
-    background: #0f1424; padding: 10px 15px; border-radius: 12px;
-    font-weight: bold; font-size: 15px; border: 1px solid #1d4ed8; color: #38bdf8;
-}
-.galaxy-badge {
-    text-align: center; font-size: 12px; color: #a78bfa;
-    background: #1e1b4b; padding: 4px; border-radius: 6px; margin-bottom: 10px;
-    border: 1px solid #5b21b6;
-}
-.game-screen { display: flex; flex-direction: column; gap: 12px; flex: 1; padding-bottom: 70px; overflow-y: auto; }
-.panel { background: #0f1424; padding: 12px; border-radius: 14px; border: 1px solid #1e293b; }
-h2 { font-size: 13px; margin-bottom: 10px; color: #9ca3af; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
+.status-bar { height: 30px; background: rgba(0,0,0,0.4); display: flex; justify-content: space-between; align-items: center; padding: 0 10px; font-size: 11px; color: #94a3b8; }
+.geo-badge { background: #1e293b; padding: 1px 6px; border-radius: 6px; color: #38bdf8; font-size: 10px; }
+.desktop-screen { padding: 15px; flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
+.app-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+.app-icon { background: #1e2235; border: 1px solid #334155; border-radius: 12px; padding: 12px; display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: background 0.2s, transform 0.1s; }
+.app-icon:hover { background: #252b44; }
+.app-icon:active { transform: scale(0.95); }
+.icon-box { font-size: 24px; margin-bottom: 4px; }
+.app-icon span { font-size: 12px; font-weight: bold; color: #f1f5f9; }
+.btn-sleep-desktop { background: #b91c1c; border: none; color: white; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 12px; cursor: pointer; width: 100%; }
 
-/* Астероид */
-.asteroid-container { text-align: center; padding: 20px 0; }
-.asteroid {
-    font-size: 75px; width: 140px; height: 140px; line-height: 140px; margin: 0 auto;
-    background: radial-gradient(circle, #1e293b 0%, #0f172a 100%); border-radius: 50%;
-    box-shadow: 0 0 30px rgba(56, 189, 248, 0.2); cursor: pointer;
-    animation: spin 25s linear infinite; transition: transform 0.05s;
-}
-@keyframes spin { 100% { transform: rotate(360deg); } }
-.asteroid:active { transform: scale(0.85) rotate(15deg); }
-.hint-text { font-size: 11px; color: #4b5563; margin-top: 8px; }
+/* --- МОНИТОР КОМПЬЮТЕРА (РАБОЧАЯ ЗОНА) --- */
+.pc-monitor { flex: 1; background: #090b11; border-radius: 16px; border: 2px solid #1e293b; display: flex; flex-direction: column; overflow: hidden; }
+.pc-status-bar { background: #1e293b; color: #38bdf8; font-size: 12px; font-weight: bold; padding: 8px 15px; letter-spacing: 0.5px; border-bottom: 1px solid #334155; }
+.pc-content-zone { flex: 1; padding: 15px; position: relative; overflow: hidden; }
 
-/* Босс Панель */
-.boss-panel { background: #7f1d1d; border: 2px solid #ef4444; border-radius: 12px; padding: 10px; text-align: center; box-shadow: 0 0 15px #ef4444; }
-.boss-title { font-size: 12px; font-weight: bold; color: white; margin-bottom: 6px; }
-.boss-hp-bar { background: #000; height: 14px; border-radius: 7px; overflow: hidden; margin-bottom: 4px; }
-.boss-hp-fill { background: #ef4444; width: 100%; height: 100%; transition: width 0.1s ease; }
-.boss-timer { font-size: 11px; color: #fca5a5; }
+/* Настольные Окна */
+.pc-window { width: 100%; height: 100%; display: flex; flex-direction: column; background: #111420; border-radius: 12px; border: 1px solid #334155; overflow: hidden; }
+.window-header { padding: 12px 15px; color: white; font-weight: bold; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+.window-header.blue { background: #1d4ed8; }
+.window-header.orange { background: #ea580c; }
+.window-header.teal { background: #0f766e; }
+.window-header.red { background: #b91c1c; }
+.window-header.chat-head { background: #27272a; }
 
-/* Сеть интерфейса */
-.cargo-grid { display: flex; justify-content: space-between; text-align: center; }
-.cargo-item { background: #070a12; padding: 8px; border-radius: 8px; flex: 1; margin: 0 3px; font-size: 12px; border: 1px solid #1e293b; }
-.market-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #1e293b; font-size: 14px; }
-.price-tag { font-weight: bold; color: #eab308; background: #18181b; padding: 3px 8px; border-radius: 6px; }
-.btn-sell { background: #22c55e; color: #000; border: none; padding: 6px 12px; border-radius: 6px; font-weight: bold; font-size: 12px; }
-.shop-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid #1e293b; }
-.shop-item h3 { font-size: 14px; color: #38bdf8; }
-.shop-item p { font-size: 11px; color: #6b7280; }
-.btn-buy { background: #2563eb; color: white; border: none; padding: 8px 12px; border-radius: 6px; font-size: 12px; font-weight: bold; }
+.window-body { flex: 1; padding: 15px; overflow-y: auto; display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; align-content: start; }
+#feed-container, #garage-container { grid-template-columns: repeat(2, 1fr); }
 
-/* Кастомные кнопки */
-.btn-pirate { background: linear-gradient(90deg, #b91c1c, #7c3aed); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; }
-.btn-warp { background: linear-gradient(90deg, #ec4899, #8b5cf6); color: white; border: none; width: 100%; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; box-shadow: 0 0 15px rgba(139,92,246,0.3); }
+/* Элементы Авторынка и Гаража */
+.car-card { background: #161b2c; border: 1px solid #2e3754; border-radius: 10px; padding: 15px; display: flex; flex-direction: column; justify-content: space-between; }
+.car-title { font-size: 16px; font-weight: bold; color: white; }
+.car-price { font-size: 18px; font-weight: 800; color: #22c55e; margin: 4px 0; }
+.car-desc { font-size: 12px; color: #94a3b8; line-height: 1.4; margin-bottom: 10px; }
+.btn-action { background: #2563eb; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; width: 100%; }
+.btn-action:hover { background: #3b82f6; }
 
-/* Модалка авторизации */
-.modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: #03050a; z-index: 1000; display: flex; justify-content: center; align-items: center; padding: 20px; }
-.modal-content { background: #0f1424; border: 2px solid #38bdf8; padding: 25px; border-radius: 16px; width: 100%; max-width: 350px; text-align: center; box-shadow: 0 0 30px rgba(56,189,248,0.3); }
-.modal-content input { background: #070a12; border: 1px solid #1d4ed8; color: white; padding: 12px; border-radius: 8px; width: 100%; text-align: center; font-size: 16px; margin: 15px 0; outline: none; }
-.btn-primary { background: #38bdf8; color: #03050a; border: none; padding: 12px; width: 100%; border-radius: 8px; font-weight: bold; font-size: 16px; }
+/* Чат на ПК */
+.chat-container { grid-template-columns: 1fr; background: #131722; height: 100%; padding: 0; }
+.chat-messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; }
+.msg { max-width: 70%; padding: 10px 14px; border-radius: 10px; font-size: 13px; line-height: 1.4; }
+.msg.seller { background: #1e2538; align-self: flex-start; color: white; }
+.msg.player { background: #1e3a8a; align-self: flex-end; color: white; text-align: right; }
+.chat-input-area { background: #1a1f31; padding: 12px; display: flex; gap: 10px; border-top: 1px solid #2e3754; }
+.btn-chat { background: #16a34a; color: white; border: none; padding: 10px 15px; border-radius: 6px; font-weight: bold; font-size: 12px; cursor: pointer; flex: 1; }
 
-/* Уведомления */
-.event-toast { position: absolute; top: 120px; left: 15px; right: 15px; background: #6d28d9; color: white; padding: 10px; border-radius: 8px; text-align: center; font-size: 11px; font-weight: bold; z-index: 500; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-.nav-footer { position: absolute; bottom: 0; left: 0; right: 0; height: 60px; background: #0f1424; border-top: 1px solid #1e293b; display: flex; justify-content: space-around; align-items: center; }
-.nav-btn { background: none; border: none; color: #4b5563; font-size: 14px; font-weight: bold; cursor: pointer; padding: 10px; }
-.nav-btn.active { color: #38bdf8; }
-.btn-reset-data { width: 100%; background: #450a0a; border: none; color: #fca5a5; padding: 6px; border-radius: 6px; font-size: 11px; }
+/* Банк на ПК */
+.split-view { grid-template-columns: 300px 1fr; height: 100%; }
+.bank-card { background: linear-gradient(135deg, #ea580c, #9a3412); padding: 20px; border-radius: 12px; color: white; height: fit-content; }
+.bank-card p { font-size: 11px; opacity: 0.8; margin-bottom: 5px; }
+.history-zone { display: flex; flex-direction: column; overflow: hidden; height: 100%; }
+.history-list { background: #161b2c; border: 1px solid #2e3754; border-radius: 10px; overflow-y: auto; flex: 1; }
+.history-item { display: flex; justify-content: space-between; padding: 10px; border-bottom: 1px solid #2e3754; font-size: 12px; }
+.history-item.positive strong { color: #22c55e; }
+.history-item.negative strong { color: #ef4444; }
+
+/* Транспорт на ПК */
+#city-travel-list { grid-template-columns: 1fr; }
+.city-card { background: #161b2c; border: 1px solid #2e3754; border-radius: 10px; padding: 15px; display: flex; justify-content: space-between; align-items: center; }
+.city-info h4 { font-size: 14px; color: white; font-weight: bold; }
+.city-info p { font-size: 11px; color: #94a3b8; }
+.travel-options { display: flex; gap: 10px; }
+.btn-travel { border: none; padding: 8px 12px; border-radius: 6px; font-size: 11px; font-weight: bold; cursor: pointer; color: white; }
+.btn-travel.train { background: #d97706; }
+.btn-travel.plane { background: #2563eb; }
+.current-city-placeholder { font-size: 12px; color: #10b981; font-weight: bold; }
+
 .hidden { display: none !important; }
-
