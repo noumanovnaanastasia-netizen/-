@@ -1,183 +1,299 @@
-// Загрузка состояния или дефолт
-let state = JSON.parse(localStorage.getItem('space_infinity_save')) || {
-    pilotName: '', money: 500, galaxy: 1, exp: 0, lastTime: Date.now(),
-    cargo: { 1: 0, 2: 0, 3: 0 },
-    upgrades: { drone: 0, drill: 1, offline: 0 }
+// ==========================================
+// ЧАСТЬ 1: НАСТРОЙКИ, БАНК И ГАРАЖ
+// ==========================================
+
+let player = JSON.parse(localStorage.getItem('avtobuy_infinity_save')) || {
+    money: 75893,
+    currentCity: "Тула",
+    garage: [],
+    history: [{ text: "Начальный капитал", val: "+75 893 ₽", type: "positive" }]
 };
 
-const galaxyConfigs = {
-    1: { name: 'Млечный Путь', ores: ['Железо', 'Золото', 'Платина'], emojis: ['🪨','✨','💎'], astEmoji: '🪨', color: '#070a12' },
-    2: { name: 'Туманность Андромеды', ores: ['Антиматерию', 'Темные Кристаллы', 'Метеоритную Пыль'], emojis: ['🌌','🔮','☄️'], astEmoji: '🪐', color: '#022c22' }
+const cities = {
+    "Тула": { desc: "Твой родной город. Цены стабильные.", dist: 0 },
+    "Москва": { desc: "Огромный авторынок, высокие цены.", dist: 180 },
+    "Питер": { desc: "Много редких иномарок.", dist: 700 },
+    "Киров": { desc: "Дешевые отечественные авто.", dist: 950 },
+    "Смоленск": { desc: "Хорошие варианты из Европы.", dist: 400 },
+    "Тюмень": { desc: "Суровый рынок Сибири.", dist: 2100 }
 };
 
-let prices = { 1: 10, 2: 50, 3: 150 };
-let timeLeft = 15; let eventModifier = 1;
-let bossActive = false; let bossHp = 100; let bossTimerInterval;
+const carPool = [
+    { model: "ЛАДА 2104", basePrice: 55000, desc: "На ходу, живой кузов, новый ковролин, шины dunlop" },
+    { model: "ЛАДА 21099", basePrice: 65000, desc: "Выставил дед. Салон чистый, нужно подкрасить заднее крыло" },
+    { model: "ИЖ Ода", basePrice: 35000, desc: "Пороги немного устали, но мотор так и шепчет" },
+    { model: "ГАЗ Волга 3110", basePrice: 85000, desc: "Настоящий корабль! Салон велюр, состояние идеальное" },
+    { model: "ISUZU V340", basePrice: 1400000, desc: "Работяга. Мотор миллионник, готов к рейсам" }
+];
 
-// Проверка регистрации ника
+const names = ["Артём", "Юрий", "Евгений", "Николай", "Сергей", "Влад"];
+let currentChatCar = null;
+let currentCityFeed = []; 
+
+// Стартовая инициализация
 window.onload = function() {
-    if (!state.pilotName) {
-        document.getElementById('auth-modal').classList.remove('hidden');
-    } else {
-        document.getElementById('auth-modal').classList.add('hidden');
-        initGame();
+    updateUI();
+    if (!localStorage.getItem('avtobuy_infinity_save') || currentCityFeed.length === 0) {
+        generateFeedForCurrentCity();
     }
+    renderFeed();
 };
-
-function registerPilot() {
-    let input = document.getElementById('pilot-name-input').value.trim();
-    state.pilotName = input ? input.substring(0, 8) : 'PILOT';
-    document.getElementById('auth-modal').classList.add('hidden');
-    initGame();
-}
-
-function initGame() {
-    // Исправленный расчет Оффлайн Дохода
-    if (state.upgrades.offline > 0) {
-        let diffMs = Date.now() - state.lastTime;
-        let tenMins = Math.floor(diffMs / 600000); 
-        if (tenMins > 0) {
-            let offlineEarned = tenMins * 5 * state.upgrades.offline;
-            state.cargo[1] += offlineEarned; // Добавляем строго в первый слот руды (Железо)
-            setTimeout(() => {
-                showToast(`🛰️ С возвращением! Пока вас не было, дроны накопили ${offlineEarned} ед. базовой руды!`);
-            }, 1000);
-        }
-    }
-    
-    // Каждые 3 секунды - доход от дронов
-    setInterval(() => {
-        if (state.upgrades.drone > 0) {
-            state.cargo[1] += state.upgrades.drone;
-            updateUI(); saveGame();
-        }
-    }, 3000);
-
-    // Каждые 4 минуты - шанс прилёта Босса
-    setInterval(() => { if(!bossActive) triggerBossEvent(); }, 240000);
-
-    updateUI(); updateMarket();
-}
 
 function saveGame() {
-    state.lastTime = Date.now();
-    localStorage.setItem('space_infinity_save', JSON.stringify(state));
-}
-
-function switchScreen(name) {
-    ['mine', 'market', 'shop', 'dark'].forEach(s => document.getElementById(`screen-${s}`).classList.add('hidden'));
-    ['mine', 'market', 'shop', 'dark'].forEach(s => document.getElementById(`nav-${s}`).classList.remove('active'));
-    document.getElementById(`screen-${name}`).classList.remove('hidden');
-    document.getElementById(`nav-${name}`).classList.add('active');
-}
-
-function handleAsteroidClick(e) {
-    if (bossActive) {
-        bossHp -= state.upgrades.drill;
-        document.getElementById('boss-hp-fill').style.width = Math.max(0, bossHp) + '%';
-        if (bossHp <= 0) winBoss();
-    } else {
-        let rand = Math.random() * 100;
-        let amt = state.upgrades.drill;
-        if (rand > 45) state.cargo[1] += amt;
-        else if (rand > 10) state.cargo[2] += amt;
-        else state.cargo[3] += amt;
-    }
-    updateUI(); saveGame();
-}
-
-function sellOre(type) {
-    if (state.cargo[type] > 0) {
-        state.money += state.cargo[type] * prices[type] * eventModifier;
-        state.cargo[type] = 0;
-        updateUI(); saveGame();
-    }
-}
-
-function buyUpgrade(type) {
-    let costs = { drone: 300, drill: 800, offline: 1500 };
-    if (state.money >= costs[type]) {
-        state.money -= costs[type];
-        if (type === 'drone') state.upgrades.drone++;
-        if (type === 'drill') state.upgrades.drill *= 2;
-        if (type === 'offline') state.upgrades.offline++;
-        updateUI(); saveGame();
-    } else { showToast("❌ Недостаточно средств для модернизации!"); }
-}
-
-function playPirateRoulette() {
-    if (state.cargo[2] < 30) { showToast("🏴‍☠️ Пираты требуют 30 штук второго типа руды для ставки!"); return; }
-    state.cargo[2] -= 30;
-    let rand = Math.random();
-    if (rand < 0.2) { state.money += 5000; showToast("🎰 ДЖЕКПОТ! Вы сорвали куш на Чёрном Рынке: +5000$!"); }
-    else if (rand < 0.4) { state.upgrades.drone += 2; showToast("🎰 УСПЕХ! Пираты подарили вам 2 Хакерских Дрона!"); }
-    else if (rand < 0.7) { state.cargo[1] = 0; state.cargo[2] = 0; state.cargo[3] = 0; showToast("🏴‍☠️ ОБМАН! Пираты напоили вас космо-элем и обчистили трюмы!"); }
-    else { state.money = Math.max(0, state.money - 1000); showToast("🚨 ОБЛАВА! Прилетела Космо-Полиция. Штраф за контрабанду: -1000$!"); }
-    updateUI(); saveGame();
-}
-
-function triggerWarpJump() {
-    if (state.money >= 25000 && state.galaxy === 1) {
-        state.money -= 25000; state.galaxy = 2;
-        document.body.style.backgroundColor = galaxyConfigs.color;
-        showToast("🌌 ВАРП-ДВИГАТЕЛЬ ЗАПУЩЕН! Вы перешли в Туманность Андметоды!");
-        updateUI(); saveGame();
-    } else if (state.galaxy === 2) { showToast("🚀 Вы уже достигли крайней доступной Галактики!"); }
-    else { showToast("❌ Для гиперпрыжка нужно 25 000$!"); }
-}
-
-function triggerBossEvent() {
-    bossActive = true; bossHp = 100;
-    document.getElementById('boss-panel').classList.remove('hidden');
-    document.getElementById('boss-hp-fill').style.width = '100%';
-    let t = 60; document.getElementById('boss-time').innerText = t;
-    switchScreen('mine');
-    
-    bossTimerInterval = setInterval(() => {
-        t--; document.getElementById('boss-time').innerText = t;
-        if (t <= 0) { endBoss(false); }
-    }, 1000);
-}
-
-function winBoss() { endBoss(true); state.money += 3000; showToast("💥 ПОБЕДА! Вы раскололи Босса! Награда: +3000$!"); updateUI(); }
-function endBoss(success) {
-    bossActive = false; clearInterval(bossTimerInterval);
-    document.getElementById('boss-panel').classList.add('hidden');
-    if (!success) { state.money = Math.max(0, state.money - 500); showToast("🚨 БОСС УЛЕТЕЛ! Осколки повредили обшивку. Ремонт: -500$!"); updateUI(); }
-    saveGame();
-}
-
-function updateMarket() {
-    prices[1] = Math.max(5, Math.floor(10 * state.galaxy + (Math.random() * 16 - 8)));
-    prices[2] = Math.max(25, Math.floor(50 * state.galaxy + (Math.random() * 60 - 30)));
-    prices[3] = Math.max(70, Math.floor(150 * state.galaxy + (Math.random() * 160 - 80)));
-
-    let rand = Math.random();
-    if (rand < 0.1) { eventModifier = 2.5; showToast("🌌 ВСПЫШКА НА СВЕРХНОВОЙ! Все цены умножены на 2.5!"); }
-    else if (rand > 0.9) { state.money = Math.floor(state.money * 0.9); showToast("🏛️ Галактическая Федерация списала 10% налога на космо-дороги!"); }
-    else { eventModifier = 1; }
-    updateUI();
+    localStorage.setItem('avtobuy_infinity_save', JSON.stringify(player));
 }
 
 function updateUI() {
-    let conf = galaxyConfigs[state.galaxy];
-    document.getElementById('pilot-name-display').innerText = state.pilotName;
-    document.getElementById('money').innerText = Math.floor(state.money);
-    document.getElementById('galaxy-text').innerText = conf.name;
-    document.getElementById('main-asteroid').innerText = conf.astEmoji;
+    document.getElementById('bank-balance').innerText = player.money.toLocaleString();
+    document.getElementById('current-city-badge').innerText = player.currentCity;
+    document.getElementById('current-market-city').innerText = player.currentCity;
+    document.getElementById('map-current-city').innerText = player.currentCity;
     
-    for (let i = 1; i <= 3; i++) {
-        document.getElementById(`ore${i}-name`).innerText = conf.ores[i-1];
-        document.getElementById(`cargo-${i}`).innerText = state.cargo[i];
-        document.getElementById(`m-ore${i}`).innerText = `${conf.emojis[i-1]} ${conf.ores[i-1]}:`;
-        document.getElementById(`price-${i}`).innerText = (prices[i] * eventModifier) + '$';
+    const historyBox = document.getElementById('bank-history');
+    historyBox.innerHTML = '';
+    player.history.slice().reverse().forEach(item => {
+        historyBox.innerHTML += `
+            <div class="history-item ${item.type}">
+                <span>${item.text}</span>
+                <strong>${item.val}</strong>
+            </div>
+        `;
+    });
+}
+
+function openApp(id) {
+    document.getElementById('screen-home').classList.add('hidden');
+    document.querySelectorAll('.app-window').forEach(app => app.classList.add('hidden'));
+    document.getElementById(`app-${id}`).classList.remove('hidden');
+    
+    if (id === 'garage') renderGarage();
+    if (id === 'map') renderMap();
+}
+
+function closeApp() {
+    document.querySelectorAll('.app-window').forEach(app => app.classList.add('hidden'));
+    document.getElementById('screen-home').classList.remove('hidden');
+}
+
+function renderGarage() {
+    const container = document.getElementById('garage-container');
+    container.innerHTML = player.garage.length === 0 ? '<p style="text-align:center;color:#6b7280;padding-top:30px;">Твой автопарк пуст. Купи авто на AvtoBuy!</p>' : '';
+    
+    player.garage.forEach((car, index) => {
+        let div = document.createElement('div');
+        div.className = 'car-card';
+        let retailPrice = Math.floor(car.marketValue * 1.18); 
+        div.innerHTML = `
+            <div class="car-title">${car.model}</div>
+            <div class="car-desc">Куплено за: ${car.buyPrice.toLocaleString()} ₽<br>Рыночная стоимость: ${car.marketValue.toLocaleString()} ₽</div>
+            <div class="car-price" style="color:#22c55e;">Выставил: ${retailPrice.toLocaleString()} ₽</div>
+            <button class="btn-action" style="background:#22c55e;" onclick="sellCarFromGarage(${index}, ${retailPrice})">Продать клиенту 💰</button>
+        `;
+        container.appendChild(div);
+    });
+}
+
+function sellCarFromGarage(index, price) {
+    let car = player.garage[index];
+    player.money += price;
+    player.garage.splice(index, 1);
+
+    player.history.push({
+        text: `Продано авто: ${car.model}`,
+        val: `+${price.toLocaleString()} ₽`,
+        type: "positive"
+    });
+
+    saveGame();
+    updateUI();
+    renderGarage();
+    alert("Успешно продано! Деньги зачислены на баланс! 🎉");
+}
+
+function goToSleep() {
+    alert("Вы легли спать. Время промоталось, авторынок обновился! 💤");
+    generateFeedForCurrentCity();
+    renderFeed();
+}
+// ==========================================
+// ЧАСТЬ 2: ОБЪЯВЛЕНИЯ, ЧАТ И ЛОГИСТИКА
+// ==========================================
+
+function generateFeedForCurrentCity() {
+    currentCityFeed = [];
+    let cityMod = player.currentCity === "Москва" ? 1.2 : (player.currentCity === "Киров" ? 0.85 : 1.0);
+    
+    for (let i = 0; i < 4; i++) {
+        let template = carPool[Math.floor(Math.random() * carPool.length)];
+        let mod = template.basePrice > 500000 ? 1 : cityMod;
+        
+        let marketValue = Math.floor(template.basePrice * mod * (1 + (Math.random() * 0.1 - 0.05)));
+        let initialPrice = Math.floor(marketValue * 0.9); 
+        let seller = names[Math.floor(Math.random() * names.length)];
+
+        currentCityFeed.push({
+            model: template.model,
+            initialPrice: initialPrice,
+            currentPrice: initialPrice,
+            marketValue: marketValue,
+            seller: seller,
+            desc: template.desc
+        });
     }
 }
 
-function showToast(txt) {
-    let t = document.getElementById('event-toast'); t.innerText = txt; t.classList.remove('hidden');
-    setTimeout(() => t.classList.add('hidden'), 5000);
+function renderFeed() {
+    const feed = document.getElementById('feed-container');
+    feed.innerHTML = '';
+    currentCityFeed.forEach((car, index) => {
+        let card = document.createElement('div');
+        card.className = 'car-card';
+        card.innerHTML = `
+            <div class="car-title">${car.model}</div>
+            <div class="car-price">${car.currentPrice.toLocaleString()} ₽</div>
+            <div class="car-desc">Продавец: ${car.seller} | Рыночная цена: ${car.marketValue.toLocaleString()} ₽<br>${car.desc}</div>
+            <button class="btn-action" onclick="startDeal(${index})">Позвонить / Торговаться</button>
+        `;
+        feed.appendChild(card);
+    });
 }
 
-setInterval(() => { timeLeft--; document.getElementById('timer').innerText = timeLeft; if (timeLeft <= 0) { timeLeft = 15; updateMarket(); } }, 1000);
-function resetAllData() { if(confirm("Сбросить Галактику?")) { localStorage.removeItem('space_infinity_save'); location.reload(); } }
+function startDeal(index) {
+    currentChatCar = { ...currentCityFeed[index], index: index, step: 0 };
+    
+    openApp('chat');
+    document.getElementById('chat-seller-name').innerText = currentChatCar.seller;
+    
+    const box = document.getElementById('chat-box');
+    box.innerHTML = `<div class="msg seller">Здравствуйте! Продаю ${currentChatCar.model}. Цена ${currentChatCar.currentPrice.toLocaleString()} ₽. Готов обсуждать! 👋</div>`;
+    showChatControls();
+}
+
+function showChatControls() {
+    const ctrl = document.getElementById('chat-controls');
+    ctrl.innerHTML = '';
+
+    let offer1 = Math.floor(currentChatCar.currentPrice * 0.88); 
+    let offer2 = Math.floor(currentChatCar.currentPrice * 0.94); 
+
+    if (currentChatCar.step === 0) {
+        ctrl.innerHTML = `
+            <button class="btn-chat" onclick="playerOffer(${offer1}, 'hard')">Предложить ${offer1.toLocaleString()} ₽ (Сбить жёстко)</button>
+            <button class="btn-chat" onclick="playerOffer(${offer2}, 'soft')">Предложить ${offer2.toLocaleString()} ₽ (Сбить мягко)</button>
+        `;
+    } else if (currentChatCar.step === 1) {
+        ctrl.innerHTML = `
+            <button class="btn-chat" style="background:#22c55e;" onclick="confirmPurchase()">🤝 Забрать авто за ${currentChatCar.currentPrice.toLocaleString()} ₽</button>
+            <button class="btn-chat" style="background:#ef4444;" onclick="openApp('avtobuy')">Отказаться от сделки</button>
+        `;
+    }
+}
+
+function playerOffer(amount, type) {
+    const box = document.getElementById('chat-box');
+    box.innerHTML += `<div class="msg player">Предлагаю ${amount.toLocaleString()} ₽ за вашу машину. 💰</div>`;
+    currentChatCar.step = 1;
+    showChatControls();
+    box.scrollTop = box.scrollHeight;
+
+    setTimeout(() => {
+        let diff = currentChatCar.currentPrice - amount;
+        if (type === 'hard' && Math.random() > 0.4) {
+            currentChatCar.currentPrice = Math.floor(amount + diff * 0.4);
+            box.innerHTML += `<div class="msg seller">Маловато будет. Давай сойдёмся хотя бы на ${currentChatCar.currentPrice.toLocaleString()} ₽? 🤔</div>`;
+        } else {
+            currentChatCar.currentPrice = amount;
+            box.innerHTML += `<div class="msg seller">Ладно, убедил. По рукам, забирай за ${amount.toLocaleString()} ₽! По рукам.</div>`;
+        }
+        showChatControls();
+        box.scrollTop = box.scrollHeight;
+    }, 800);
+}
+
+function confirmPurchase() {
+    if (player.money >= currentChatCar.currentPrice) {
+        player.money -= currentChatCar.currentPrice;
+        player.garage.push({
+            model: currentChatCar.model,
+            buyPrice: currentChatCar.currentPrice,
+            marketValue: currentChatCar.marketValue
+        });
+        
+        player.history.push({
+            text: `Покупка авто: ${currentChatCar.model}`,
+            val: `-${currentChatCar.currentPrice.toLocaleString()} ₽`,
+            type: "negative"
+        });
+
+        currentCityFeed.splice(currentChatCar.index, 1);
+        
+        saveGame();
+        updateUI();
+        alert("Сделка согласована! Машина перегнана в ваш Гараж. 🚙");
+        openApp('garage');
+    } else {
+        alert("Ошибка! Недостаточно денег в П-Банке!");
+    }
+}
+
+function renderMap() {
+    const list = document.getElementById('city-travel-list');
+    list.innerHTML = '';
+
+    for (let cityName in cities) {
+        let div = document.createElement('div');
+        div.className = 'city-card';
+        
+        if (cityName === player.currentCity) {
+            div.innerHTML = `
+                <div class="city-info"><h4>${cityName}</h4><p>${cities[cityName].desc}</p></div>
+                <span class="current-city-placeholder">Вы здесь 📍</span>
+            `;
+        } else {
+            let trainCost = Math.floor(2020 + cities[cityName].dist * 0.5);
+            let planeCost = Math.floor(6664 + cities[cityName].dist * 1.2);
+            div.innerHTML = `
+                <div class="city-info"><h4>${cityName}</h4><p>${cities[cityName].desc}</p></div>
+                <div class="travel-options">
+                    <button class="btn-travel train" onclick="travelToCity('${cityName}', ${trainCost}, 'Поезд')">🚂 ${trainCost}₽</button>
+                    <button class="btn-travel plane" onclick="travelToCity('${cityName}', ${planeCost}, 'Самолёт')">✈️ ${planeCost}₽</button>
+                </div>
+            `;
+        }
+        list.appendChild(div);
+    }
+}
+
+function travelToCity(targetCity, cost, mode) {
+    if (player.money >= cost) {
+        player.money -= cost;
+        player.currentCity = targetCity;
+        
+        player.history.push({
+            text: `${mode}: ${player.currentCity}`,
+            val: `-${cost.toLocaleString()} ₽`,
+            type: "negative"
+        });
+
+        generateFeedForCurrentCity(); 
+        saveGame();
+        updateUI();
+        renderMap();
+        alert(`Вы прибыли в г. ${targetCity}! Лента AvtoBuy обновилась локальными объявлениями.`);
+    } else {
+        alert("Недостаточно денег на билет!");
+    }
+}
+
+setInterval(() => { 
+    timeLeft--; 
+    document.getElementById('timer').innerText = timeLeft; 
+    if (timeLeft <= 0) { 
+        timeLeft = 15; 
+        let cityMod = player.currentCity === "Москва" ? 1.2 : (player.currentCity === "Киров" ? 0.85 : 1.0);
+        currentCityFeed.forEach(car => {
+            car.currentPrice = Math.floor(car.initialPrice * (1 + (Math.random() * 0.06 - 0.03)));
+        });
+        renderFeed();
+    } 
+}, 1000);
